@@ -1,23 +1,95 @@
-import logo from './logo.svg';
+// import logo from './logo.svg';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
 function App() {
+  const emptyArr = ['','','',''];
+  const refs = [useRef(),useRef(),useRef(),useRef()];
+  const [inputs,setInputs] = useState(emptyArr);
+  const[missing,setMissing] = useState(emptyArr);
+  const CODE = '1234';
+
+  const handleSubmit = () => {
+
+    const missed = inputs.map((item, i) => {
+      if (item === '')
+        return i;
+    }).filter((item) => (item || item === 0));
+    console.log('missed ', missed);
+    setMissing(missed);
+    if (missed.length) {
+      return
+    }
+
+    const userInput = inputs.join('');
+    const isMatch = userInput === CODE;
+    const msg = isMatch ? 'Code is Valid' : 'Code is not Valid';
+    alert(msg);
+  }
+  useEffect(() =>{
+    refs[0].current.focus();
+  },[])
+
+  const handleInputChange=(e,index)=>{
+    const val = e.target.value;
+    console.log(val,index);
+    if(!Number(val))
+      return;
+    
+    if(index<inputs.length-1){
+      refs[index+1].current.focus();
+    }
+    const copyInputs = [...inputs];
+    copyInputs[index] = val;
+    setInputs(copyInputs);
+    
+  }
+
+  const handleOnKeyDown = (e, index) => {
+    console.log(e.keyCode, index);
+    if (e.keyCode === 8) {
+      const copyInputs = [...inputs];
+      copyInputs[index] = '';
+      setInputs(copyInputs);
+
+      if (index > 0) {
+        refs[index - 1].current.focus();
+      }
+    }
+  }
+
+  const handlePaste = (e) => {
+    const data = e.clipboardData.getData('text');
+    console.log('paste data ', data)
+    if (!Number(data) || data.length !== inputs.length)
+      return;
+
+    const pastCode = data.split('');
+    setInputs(pastCode);
+    refs[inputs.length - 1].current.focus();
+  }
+  console.log('inputs',inputs);
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>TWO FACTOR AUTHENTICATION</h1>
+      <div>
+        {
+        emptyArr.map((item,i) =>{
+          return <input
+          value={inputs[i]}
+          key={i}
+          ref={refs[i]}
+          type='text'
+          maxLength='1'
+          onChange={(e)=>handleInputChange(e,i)}
+          onKeyDown={(e)=>handleOnKeyDown(e,i)}
+          onPaste={handlePaste}
+          className={missing.includes(i) ? 'error' : ''}
+          />
+        })
+        }
+      </div>
+      <button  onClick={handleSubmit}>Submit</button>
     </div>
   );
 }
